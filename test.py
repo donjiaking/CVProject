@@ -7,20 +7,17 @@ from torchvision.utils import make_grid
 from torchvision.utils import save_image
 import time
 import os
+import argparse
 
 import util
 from net import PConvUNet
 
-TEST_IMG = './dataset/val'
-TEST_MSK = './dataset/masks'
-
-BATCH_SIZE = 32
 
 """
 Evaluate the model given a dataset
 """
-def evaluate(model, testDataset):
-    test_loader = DataLoader(testDataset, batch_size=BATCH_SIZE, shuffle=False)
+def evaluate(model, testDataset, args):
+    test_loader = DataLoader(testDataset, batch_size=args.batch_size, shuffle=False)
 
     print("Testing Started")  
     start_time = time.time()
@@ -37,7 +34,7 @@ def evaluate(model, testDataset):
             # TODO: Erro Function?
 
 """
-show masked image, mask, output, groud truth image in one grid
+Show masked image, mask, output, groud truth image in one grid
 """
 def show_visual_result(model, dataset, output_dir, n=6):
     img, mask, gt = zip(*[dataset[i] for i in range(n)])
@@ -56,9 +53,18 @@ def show_visual_result(model, dataset, output_dir, n=6):
 
 
 if __name__ == "__main__":
-    model = PConvUNet()
-    model.load_state_dict(torch.load('./trained_model.pth'))
-    testDataset = util.build_dataset(TEST_IMG, TEST_MSK, isTrain=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--img_path', type=str, default="./dataset/val")
+    parser.add_argument('--mask_path', type=str, default="./dataset/masks")
+    parser.add_argument('--model_path', type=str, default="./trained_model.pth")
+    parser.add_argument('--out_dir', type=str, default="./result")
+    args = parser.parse_args()
 
-    # evaluate(model, testDataset)
-    show_visual_result(model, testDataset, "result")
+    model = PConvUNet()
+    model.load_state_dict(torch.load(args.model_path))
+    testDataset = util.build_dataset(args.img_path, args.mask_path, isTrain=False)
+
+    # evaluate(model, testDataset, args)
+    show_visual_result(model, testDataset, args.out_dir)
+    

@@ -5,34 +5,27 @@ import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import time
+import argparse
 
 from net import PConvUNet
 from loss import LossFunc
 import util
 
-TRAIN_IMG = './dataset/train'
-TRAIN_MSK = './dataset/masks'
 
-EPOCHS_NUM = 1
-BATCH_SIZE = 16
-
-INITIAL_LR = 2e-4
-# WEIGHT_DECAY = 1e-4
-
-def train(model):
-    trainDataset = util.build_dataset(TRAIN_IMG, TRAIN_MSK, isTrain=True)
-    train_loader = DataLoader(trainDataset, batch_size=BATCH_SIZE, shuffle=False)
+def train(model, args):
+    trainDataset = util.build_dataset(args.img_path, args.mask_path, isTrain=True)
+    train_loader = DataLoader(trainDataset, batch_size=args.bath_size, shuffle=False)
 
     criterion = LossFunc()
-    optimizer = optim.Adam(filter(lambda x:x.requires_grad, model.parameters()), lr=INITIAL_LR)
+    optimizer = optim.Adam(filter(lambda x:x.requires_grad, model.parameters()), lr=args.init_lr)
     
     print('Training Started')
     start_time = time.time()
 
     model.train()
 
-    for epoch in range(EPOCHS_NUM):
-        # _adjust_lr(optimizer, epoch+1) 
+    for epoch in range(args.epochs):
+        # _adjust_lr(optimizer, args.init_lr, epoch+1) 
 
         for i, data in enumerate(train_loader, 0):
             # get the inputs
@@ -53,14 +46,14 @@ def train(model):
                       'Loss {:.4f}'.format(
                        epoch+1, i+1, len(train_loader), loss.item()))
     
-    torch.save(model.state_dict(), './trained_model.pth')
+    torch.save(model.state_dict(), args.out_path)
     print('Training Finished')
     print('Training Time: {:.2f}'.format(time.time()-start_time))
 
 
 # adust lr every 20 epochs
-def _adjust_lr(optimizer, epoch_num):
-    lr = INITIAL_LR * (0.1 ** (epoch_num//20))
+def _adjust_lr(optimizer, init_lr, epoch_num):
+    lr = init_lr * (0.1 ** (epoch_num//20))
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -68,5 +61,14 @@ def _adjust_lr(optimizer, epoch_num):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--init_lr', type=float, default=2e-4)
+    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--epochs', type=int, default=1)
+    parser.add_argument('--img_path', type=str, default="./dataset/train")
+    parser.add_argument('--mask_path', type=str, default="./dataset/masks")
+    parser.add_argument('--out_path', type=str, default="./trained_model.pth")
+    args = parser.parse_args()
+
     model = PConvUNet()
-    train(model)
+    train(model, args)
