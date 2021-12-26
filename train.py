@@ -13,8 +13,8 @@ import util
 
 
 def train(model, args):
-    trainDataset = util.build_dataset(args.img_path, args.mask_path, isTrain=True)
-    train_loader = DataLoader(trainDataset, batch_size=args.bath_size, shuffle=False)
+    trainDataset = util.build_dataset(args.img_dir, args.mask_dir, isTrain=True)
+    train_loader = DataLoader(trainDataset, batch_size=args.batch_size, shuffle=False)
 
     criterion = LossFunc()
     optimizer = optim.Adam(filter(lambda x:x.requires_grad, model.parameters()), lr=args.init_lr)
@@ -65,8 +65,8 @@ if __name__ == "__main__":
     parser.add_argument('--init_lr', type=float, default=2e-4)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--epochs', type=int, default=1)
-    parser.add_argument('--img_path', type=str, default="./dataset/train")
-    parser.add_argument('--mask_path', type=str, default="./dataset/masks")
+    parser.add_argument('--img_dir', type=str, default="./dataset/train")
+    parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--out_path', type=str, default="./trained_model.pth")
     args = parser.parse_args()
 

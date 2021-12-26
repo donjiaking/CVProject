@@ -6,7 +6,7 @@ from torchvision import models
 Partial Convolution Layer used in PConvUNet
 """
 class PConv2d(nn.Module):
-    def __init__(self, in_channels, out_channels, sample="none",
+    def __init__(self, in_channels, out_channels, bias=False, sample="none",
                                     has_bn=True, nonlinearity="relu") -> None:
         super().__init__()
 
@@ -30,27 +30,27 @@ class PConv2d(nn.Module):
         # different down-sampling cases
         if(sample == "down-7"):
             self.x_conv = nn.Conv2d(in_channels, out_channels,
-                     kernel_size=7, stride=2, padding=3, bias=True)
+                     kernel_size=7, stride=2, padding=3, bias=bias)
             self.m_conv = nn.Conv2d(in_channels, out_channels,
                      kernel_size=7, stride=2, padding=3, bias=False)
         elif(sample == "down-5"):
             self.x_conv = nn.Conv2d(in_channels, out_channels,
-                     kernel_size=5, stride=2, padding=2, bias=True)
+                     kernel_size=5, stride=2, padding=2, bias=bias)
             self.m_conv = nn.Conv2d(in_channels, out_channels,
                      kernel_size=5, stride=2, padding=2, bias=False)
         elif(sample == "down-3"):
             self.x_conv = nn.Conv2d(in_channels, out_channels,
-                     kernel_size=3, stride=2, padding=1, bias=True)
+                     kernel_size=3, stride=2, padding=1, bias=bias)
             self.m_conv = nn.Conv2d(in_channels, out_channels,
                      kernel_size=3, stride=2, padding=1, bias=False)
         else:  # no down-sample
             self.x_conv = nn.Conv2d(in_channels, out_channels,
-                     kernel_size=3, stride=1, padding=1, bias=True)
+                     kernel_size=3, stride=1, padding=1, bias=bias)
             self.m_conv = nn.Conv2d(in_channels, out_channels,
                      kernel_size=3, stride=1, padding=1, bias=False)
         
         # initialize kernel weight
-        nn.init.kaiming_normal_(self.x_conv.weight, mode='fan_out', nonlinearity='relu')
+        nn.init.kaiming_normal_(self.x_conv.weight, mode='fan_in', a=0)
         nn.init.constant_(self.m_conv.weight, 1.0)
 
         for param in self.m_conv.parameters():

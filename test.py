@@ -40,13 +40,15 @@ def show_visual_result(model, dataset, output_dir, n=6):
     img, mask, gt = zip(*[dataset[i] for i in range(n)])
     img = torch.stack(img, dim=0) # --> n x 3 x 256 x 256
     mask = torch.stack(mask, dim=0)
+    gt = torch.stack(gt, dim=0)
     with torch.no_grad():
         output = model(img, mask)
 
-    grid = make_grid(torch.cat((img, mask, output, gt), dim=0), nrow=n)
+    grid = make_grid(torch.cat((util.unnormalize(gt)*mask, mask, util.unnormalize(output), util.unnormalize(gt)), dim=0), nrow=n)
 
     if(not os.path.exists(output_dir)):
         os.makedirs(output_dir)
+
     save_image(grid, os.path.join(output_dir, "output_show.jpg"))
 
     print("Result successfully saved")
@@ -55,16 +57,15 @@ def show_visual_result(model, dataset, output_dir, n=6):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--img_path', type=str, default="./dataset/val")
-    parser.add_argument('--mask_path', type=str, default="./dataset/masks")
+    parser.add_argument('--img_dir', type=str, default="./dataset/val")
+    parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--model_path', type=str, default="./trained_model.pth")
     parser.add_argument('--out_dir', type=str, default="./result")
     args = parser.parse_args()
 
     model = PConvUNet()
     model.load_state_dict(torch.load(args.model_path))
-    testDataset = util.build_dataset(args.img_path, args.mask_path, isTrain=False)
+    testDataset = util.build_dataset(args.img_dir, args.mask_dir, isTrain=False)
 
     # evaluate(model, testDataset, args)
     show_visual_result(model, testDataset, args.out_dir)
-    

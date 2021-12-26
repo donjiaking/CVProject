@@ -10,9 +10,9 @@ def gram_matrix(feature_matrix):
 
 	# (batch, channel, h*w) x (batch, h*w, channel) -> (batch, channel, channel)
     # then multiply K_p=1/(channel*h*w), which is the normalization factor
-	gram_matrix = torch.bmm(feature_matrix, feature_matrix_t) / (channel*h*w)
+	gram_mat = torch.bmm(feature_matrix, feature_matrix_t) / (channel*h*w)
 
-	return gram_matrix
+	return gram_mat
 
 """
 project images into higher level feature spaces using part of 

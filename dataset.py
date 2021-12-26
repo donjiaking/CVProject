@@ -4,6 +4,7 @@ from torchvision import transforms
 import os
 import cv2
 import random
+from PIL import Image
 from torchvision.utils import make_grid
 from torchvision.utils import save_image
 
@@ -17,11 +18,12 @@ class ImgDataset(Dataset):
     img_dir: directory for original train/val images
     mask_dir: directory for masks
     """
-    def __init__(self, img_dir, mask_dir, transform=None):
+    def __init__(self, img_dir, mask_dir, transform_img, transform_msk):
         super().__init__()
         self.img_dir = img_dir
         self.mask_dir = mask_dir
-        self.transform = transform
+        self.transform_img = transform_img
+        self.transform_msk = transform_msk
 
         self.img_names = {i:name for i,name in enumerate(os.listdir(img_dir))}
         self.mask_names = {i:name for i,name in enumerate(os.listdir(mask_dir))}
@@ -40,9 +42,10 @@ class ImgDataset(Dataset):
         mask = cv2.imread(mask_path) 
         mask = cv2.cvtColor(mask, cv2.COLOR_BGR2RGB)
 
-        if(self.transform):
-            img = self.transform(img)
-            mask = self.transform(mask)
+        if(self.transform_img):
+            img = self.transform_img(img)
+        if(self.transform_msk):
+            mask = self.transform_msk(mask)
 
         # masked image, mask, groud truth image
         return img*mask, mask, img
@@ -50,12 +53,13 @@ class ImgDataset(Dataset):
 
 #### For testing
 if __name__ == '__main__':
-	imgDataset = util.build_dataset('./dataset/train','./dataset/masks')
-	print(len(imgDataset))
-	img, mask, gt = zip(*[imgDataset[i] for i in range(5)])
-	img = torch.stack(img, dim=0) # --> i x 3 x 256 x 256
-	mask = torch.stack(mask, dim=0)
-	gt = torch.stack(gt, dim=0)
+    imgDataset = util.build_dataset('./dataset/train','./dataset/masks')
+    print(len(imgDataset))
+    nrow = 5
+    img, mask, gt = zip(*[imgDataset[i] for i in range(nrow)])
+    img = torch.stack(img, dim=0) # shape: nrow x 3 x 256 x 256
+    mask = torch.stack(mask, dim=0)
+    gt = torch.stack(gt, dim=0)
 
-	grid = make_grid(torch.cat((util.unnormalize(img), mask, util.unnormalize(gt)), dim=0), nrow=5)
-	save_image(grid, "result/input_show.jpg")
+    grid = make_grid(torch.cat((util.unnormalize(gt)*mask, mask, util.unnormalize(gt)), dim=0), nrow=nrow)
+    save_image(grid, "result/input_show.jpg")

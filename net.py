@@ -13,6 +13,7 @@ class PConvUNet(nn.Module):
         # should be fixed to 7, the same for decoder stage
 
         ######################## Encoder (pconv_1 - pconv_7) ############################
+        
         # 3x256x256->64x128x128
         self.pconv_1 = PConv2d(3, 64, has_bn=False, sample="down-7")
 
@@ -31,6 +32,7 @@ class PConvUNet(nn.Module):
         self.pconv_7 = PConv2d(512, 512, sample="down-3")
 
         ####################### Decoder (pconv_8 - pconv_14) ############################
+
         # 512x4x4(upsample output) + 512x4x4(pconv_6 output) = 1024x4x4->512x4x4
         self.pconv_8 = PConv2d(512+512, 512, nonlinearity="leaky")
 
@@ -50,11 +52,12 @@ class PConvUNet(nn.Module):
         self.pconv_13 = PConv2d(128+64, 64, nonlinearity="leaky")
 
 		# 64x256x256(upsample output) + 3x256x256(original image) = 67x256x256->3x256x256
-        self.pconv_14 = PConv2d(64+3, 3, has_bn=False, nonlinearity="")
+        self.pconv_14 = PConv2d(64+3, 3, bias=True, has_bn=False, nonlinearity="")
     
 
     def forward(self, x, m):
         ######################## Encoder (pconv_1 - pconv_7) ############################
+
         original_x, original_m = x, m
         out1_x, out1_m = self.pconv_1(x, m)
         out2_x, out2_m = self.pconv_2(out1_x, out1_m)
@@ -65,7 +68,8 @@ class PConvUNet(nn.Module):
         out7_x, out7_m = self.pconv_7(out6_x, out6_m)
 
         ####################### Decoder (pconv_8 - pconv_14) ############################
-        x = F.interpolate(out7_x, scale_factor=2)
+
+        x = F.interpolate(out7_x, scale_factor=2) # default upsampling mode: nearest
         m = F.interpolate(out7_m, scale_factor=2)
         x = torch.cat([x, out6_x], dim=1)
         m = torch.cat([m, out6_m], dim=1)
