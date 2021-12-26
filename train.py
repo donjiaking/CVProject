@@ -11,12 +11,12 @@ from loss import LossFunc
 import util
 
 TRAIN_IMG = './dataset/train'
-TRAIN_MSK = './dataset/train_mask'
+TRAIN_MSK = './dataset/masks'
 
-EPOCHS_NUM = 20
-BATCH_SIZE = 6
+EPOCHS_NUM = 1
+BATCH_SIZE = 16
 
-INITIAL_LR = 0.001
+INITIAL_LR = 2e-4
 # WEIGHT_DECAY = 1e-4
 
 def train(model):
@@ -47,10 +47,10 @@ def train(model):
             loss.backward()
             optimizer.step()
 
-            # print statistics after every 20 batch
-            if((i+1) % 20 == 0):
-                print('Epoch: [{0}][{1}/{2}]\t'
-                      'Loss {:.4f}\n'.format(
+            # print statistics after every 1 batch
+            if((i+1) % 1 == 0):
+                print('Epoch: [{}][{}/{}]\t'
+                      'Loss {:.4f}'.format(
                        epoch+1, i+1, len(train_loader), loss.item()))
     
     torch.save(model.state_dict(), './trained_model.pth')

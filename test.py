@@ -6,12 +6,13 @@ import cv2
 from torchvision.utils import make_grid
 from torchvision.utils import save_image
 import time
+import os
 
 import util
 from net import PConvUNet
 
 TEST_IMG = './dataset/val'
-TEST_MSK = './dataset/val_mask'
+TEST_MSK = './dataset/masks'
 
 BATCH_SIZE = 32
 
@@ -38,7 +39,7 @@ def evaluate(model, testDataset):
 """
 show masked image, mask, output, groud truth image in one grid
 """
-def show_visual_result(model, dataset, output_path, n=6):
+def show_visual_result(model, dataset, output_dir, n=6):
     img, mask, gt = zip(*[dataset[i] for i in range(n)])
     img = torch.stack(img, dim=0) # --> n x 3 x 256 x 256
     mask = torch.stack(mask, dim=0)
@@ -46,7 +47,12 @@ def show_visual_result(model, dataset, output_path, n=6):
         output = model(img, mask)
 
     grid = make_grid(torch.cat((img, mask, output, gt), dim=0), nrow=n)
-    save_image(grid, output_path)
+
+    if(not os.path.exists(output_dir)):
+        os.makedirs(output_dir)
+    save_image(grid, os.path.join(output_dir, "output_show.jpg"))
+
+    print("Result successfully saved")
 
 
 if __name__ == "__main__":
@@ -55,4 +61,4 @@ if __name__ == "__main__":
     testDataset = util.build_dataset(TEST_IMG, TEST_MSK, isTrain=False)
 
     # evaluate(model, testDataset)
-    show_visual_result(model, testDataset, "./result/output_show.jpg")
+    show_visual_result(model, testDataset, "result")

@@ -41,7 +41,7 @@ class PConvUNet(nn.Module):
         self.pconv_10 = PConv2d(512+512, 512, nonlinearity="leaky")
 
         # 512x32x32(upsample output) + 256x32x32(pconv_3 output) = 768x32x32->256x32x32
-        self.pconv_11 = PConv2d(512+256, 512, nonlinearity="leaky")
+        self.pconv_11 = PConv2d(512+256, 256, nonlinearity="leaky")
 
 		# 256x64x64(upsample output) + 128x64x64(pconv_2 output) = 384x64x64->128x64x64
         self.pconv_12 = PConv2d(256+128, 128, nonlinearity="leaky")

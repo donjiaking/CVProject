@@ -15,7 +15,7 @@ Wrapper class for Places2 Dateset
 class ImgDataset(Dataset):
     """
     img_dir: directory for original train/val images
-    mask_dir: directory for train/val masks
+    mask_dir: directory for masks
     """
     def __init__(self, img_dir, mask_dir, transform=None):
         super().__init__()
@@ -27,7 +27,8 @@ class ImgDataset(Dataset):
         self.mask_names = {i:name for i,name in enumerate(os.listdir(mask_dir))}
 
     def __len__(self):
-        return len(self.img_names)
+        # return len(self.img_names)
+        return 1000
 
     def __getitem__(self, idx):
         image_path = os.path.join(self.img_dir, self.img_names[idx])
@@ -49,7 +50,7 @@ class ImgDataset(Dataset):
 
 #### For testing
 if __name__ == '__main__':
-	imgDataset = util.build_dataset('./dataset/train','./dataset/train_mask')
+	imgDataset = util.build_dataset('./dataset/train','./dataset/masks')
 	print(len(imgDataset))
 	img, mask, gt = zip(*[imgDataset[i] for i in range(5)])
 	img = torch.stack(img, dim=0) # --> i x 3 x 256 x 256
@@ -57,4 +58,4 @@ if __name__ == '__main__':
 	gt = torch.stack(gt, dim=0)
 
 	grid = make_grid(torch.cat((util.unnormalize(img), mask, util.unnormalize(gt)), dim=0), nrow=5)
-	save_image(grid, "./result/input_show.jpg")
+	save_image(grid, "result/input_show.jpg")

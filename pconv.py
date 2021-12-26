@@ -68,7 +68,7 @@ class PConv2d(nn.Module):
             bias = torch.zeros_like(x_conv)
         
         # mask_ratio = sum(1) / sum(M)
-        mask_ratio = (self.in_channels*self.kernel_size[0]*self.kernel_size[1])/(m_conv+1e-8)
+        mask_ratio = (self.in_channels*self.x_conv.kernel_size[0]*self.x_conv.kernel_size[1])/(m_conv+1e-8)
         updated_mask = torch.clamp(m_conv, 0, 1)
         mask_ratio = torch.mul(mask_ratio, updated_mask)
 

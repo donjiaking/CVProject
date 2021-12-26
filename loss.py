@@ -67,8 +67,8 @@ class LossFunc(nn.Module):
             l_style += self.l1(gram_matrix(f_out[p]), gram_matrix(f_gt[p]))
             l_style += self.l1(gram_matrix(f_comp_out[p]), gram_matrix(f_gt[p]))
 
-        l_tv = self.l1(input_img[:,:,:,:-1] - input_img[:,:,:,1:]) + \
-               self.l1(input_img[:,:,:-1,:] - input_img[:,:,1:,:])
+        l_tv = self.l1(comp_out[:,:,:,:-1], comp_out[:,:,:,1:]) + \
+               self.l1(comp_out[:,:,:-1,:], comp_out[:,:,1:,:])
 
         total_loss = l_valid + 6*l_hole + 0.05*l_perceptual + 120*l_style + 0.1*l_tv
 

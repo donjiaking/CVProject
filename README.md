@@ -2,11 +2,11 @@
 
 ## Prerequisite
 
-Download dataset and organize the folder as follows:
+Download dataset and organize the dataset folder as follows:
 ```
 | -- dataset
     | -- train
-    | -- train_mask
     | -- val
-    | -- val_mask
 ```
+
+Run `python generate_mask.py` to generate 5000 masks of 256*256 size by default.
