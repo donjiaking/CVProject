@@ -1,11 +1,10 @@
 import torch
 from torch.utils.data import DataLoader, Dataset
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import time
 import argparse
+import os
 
 from net import PConvUNet
 from loss import LossFunc
@@ -46,7 +45,9 @@ def train(model, args):
                       'Loss {:.4f}'.format(
                        epoch+1, i+1, len(train_loader), loss.item()))
     
-    torch.save(model.state_dict(), args.out_path)
+    if(not os.path.exists(args.out_dir)):
+        os.mkdir(args.out_dir)
+    torch.save(model.state_dict(), os.path.join(args.out_dir, "model.pth"))
     print('Training Finished')
     print('Training Time: {:.2f}'.format(time.time()-start_time))
 
@@ -67,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--img_dir', type=str, default="./dataset/train")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
-    parser.add_argument('--out_path', type=str, default="./trained_model.pth")
+    parser.add_argument('--out_dir', type=str, default="./model")
     args = parser.parse_args()
 
     model = PConvUNet()

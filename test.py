@@ -59,12 +59,12 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--img_dir', type=str, default="./dataset/val")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
-    parser.add_argument('--model_path', type=str, default="./trained_model.pth")
+    parser.add_argument('--model_dir', type=str, default="./model")
     parser.add_argument('--out_dir', type=str, default="./result")
     args = parser.parse_args()
 
     model = PConvUNet()
-    model.load_state_dict(torch.load(args.model_path))
+    model.load_state_dict(torch.load(os.path.join(args.model_dir, "model.pth")))
     testDataset = util.build_dataset(args.img_dir, args.mask_dir, isTrain=False)
 
     # evaluate(model, testDataset, args)
