@@ -29,8 +29,8 @@ class ImgDataset(Dataset):
         self.mask_names = {i:name for i,name in enumerate(os.listdir(mask_dir))}
 
     def __len__(self):
-        # return len(self.img_names)
-        return 1000
+        return len(self.img_names)
+        #return 1000
 
     def __getitem__(self, idx):
         image_path = os.path.join(self.img_dir, self.img_names[idx])
