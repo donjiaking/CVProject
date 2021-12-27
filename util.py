@@ -3,6 +3,9 @@ from torchvision import transforms
 
 from dataset import ImgDataset
 
+##added 2021/12/27
+device = torch.device('cuda')
+
 def build_dataset(img_dir, mask_dir, isTrain=True):
     ## train data augmentation
     transform_train_img = transforms.Compose([    
@@ -39,8 +42,8 @@ def build_dataset(img_dir, mask_dir, isTrain=True):
 
 def unnormalize(x):
     x = x.transpose(1, 3)
-    x = x * torch.Tensor([0.229, 0.224, 0.225]) + \
-            torch.Tensor([0.485, 0.456, 0.406])
+    x = x * torch.Tensor([0.229, 0.224, 0.225]).to(device) + \
+            torch.Tensor([0.485, 0.456, 0.406]).to(device)
     x = x.transpose(1, 3)
 
     return x

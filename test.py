@@ -12,6 +12,8 @@ import argparse
 import util
 from net import PConvUNet
 
+##added 2021/12/27
+device = torch.device('cuda')
 
 """
 Evaluate the model given a dataset
@@ -38,9 +40,17 @@ Show masked image, mask, output, groud truth image in one grid
 """
 def show_visual_result(model, dataset, output_dir, n=6):
     img, mask, gt = zip(*[dataset[i] for i in range(n)])
+
+    # for i in range(n):
+    #     img[i] = img[i].to(device)
+    #     mask[i] = mask[i].to(device)
+    #     gt[i] = gt[i].to(device)
     img = torch.stack(img, dim=0) # --> n x 3 x 256 x 256
     mask = torch.stack(mask, dim=0)
     gt = torch.stack(gt, dim=0)
+    img = img.to(device)
+    mask = mask.to(device)
+    gt = gt.to(device)
     with torch.no_grad():
         output = model(img, mask)
 
@@ -56,14 +66,14 @@ def show_visual_result(model, dataset, output_dir, n=6):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=4)#when in gtx960, the batch_size will be set to 4
     parser.add_argument('--img_dir', type=str, default="./dataset/val")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--model_dir', type=str, default="./model")
     parser.add_argument('--out_dir', type=str, default="./result")
     args = parser.parse_args()
 
-    model = PConvUNet()
+    model = PConvUNet().to(device)
     model.load_state_dict(torch.load(os.path.join(args.model_dir, "model.pth")))
     testDataset = util.build_dataset(args.img_dir, args.mask_dir, isTrain=False)
 

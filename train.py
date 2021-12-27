@@ -10,12 +10,15 @@ from net import PConvUNet
 from loss import LossFunc
 import util
 
+##added 2021/12/27
+device = torch.device('cuda')
+
 
 def train(model, args):
     trainDataset = util.build_dataset(args.img_dir, args.mask_dir, isTrain=True)
     train_loader = DataLoader(trainDataset, batch_size=args.batch_size, shuffle=False)
 
-    criterion = LossFunc()
+    criterion = LossFunc().to(device)
     optimizer = optim.Adam(filter(lambda x:x.requires_grad, model.parameters()), lr=args.init_lr)
     
     print('Training Started')
@@ -30,6 +33,9 @@ def train(model, args):
             # get the inputs
             img, mask, gt = data
 
+            img = img.to(device)
+            mask = mask.to(device)
+            gt = gt.to(device)
             # zero the parameter gradients
             optimizer.zero_grad()
 
@@ -64,12 +70,12 @@ def _adjust_lr(optimizer, init_lr, epoch_num):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--init_lr', type=float, default=2e-4)
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=4) #when in gtx960, the batch_size will be set to 4
     parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--img_dir', type=str, default="./dataset/train")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--out_dir', type=str, default="./model")
     args = parser.parse_args()
 
-    model = PConvUNet()
+    model = PConvUNet().to(device)
     train(model, args)
