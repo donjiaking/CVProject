@@ -1,6 +1,7 @@
 from numpy.core.fromnumeric import size
 import torch
 from torch.utils.data import DataLoader, Dataset
+import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import cv2
 from torchvision.utils import make_grid
@@ -8,14 +9,56 @@ from torchvision.utils import save_image
 import time
 import os
 import argparse
-from skimage.metrics import structural_similarity as get_ssim
-from skimage.metrics import peak_signal_noise_ratio as get_psnr
+from piq.functional import gaussian_filter
+from piq.utils import _validate_input, _reduce
+from piq.ssim import _ssim_per_channel
 
 import util
 from net import PConvUNet
 
 ##added 2021/12/27
 device = torch.device('cuda')
+
+
+"""
+SSIM and PSNR function to evaluate the performance
+    References:
+        https://piq.readthedocs.io/en/latest/
+"""
+def ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, kernel_sigma: float = 1.5,
+        reduction: str = 'mean', full: bool = False, k1: float = 0.01, k2: float = 0.03):
+    x = x.type(torch.float32)
+    y = y.type(torch.float32)
+
+    kernel = gaussian_filter(kernel_size, kernel_sigma).repeat(x.size(1), 1, 1, 1).to(y)
+    ssim_map, cs_map = _ssim_per_channel(x=x, y=y, kernel=kernel,  k1=k1, k2=k2)
+    ssim_val = ssim_map.mean(1)
+    cs = cs_map.mean(1)
+
+    ssim_val = _reduce(ssim_val, reduction)
+    cs = _reduce(cs, reduction)
+
+    if full:
+        return [ssim_val, cs]
+
+    return ssim_val
+
+def psnr(x: torch.Tensor, y: torch.Tensor, 
+         reduction: str = 'mean', convert_to_greyscale: bool = False):
+
+    # Constant for numerical stability
+    EPS = 1e-8
+
+    if (x.size(1) == 3) and convert_to_greyscale:
+        # Convert RGB image to YCbCr and take luminance: Y = 0.299 R + 0.587 G + 0.114 B
+        rgb_to_grey = torch.tensor([0.299, 0.587, 0.114]).view(1, -1, 1, 1).to(x)
+        x = torch.sum(x * rgb_to_grey, dim=1, keepdim=True)
+        y = torch.sum(y * rgb_to_grey, dim=1, keepdim=True)
+
+    mse = torch.mean((x - y) ** 2, dim=[1, 2, 3])
+    score: torch.Tensor = - 10 * torch.log10(mse + EPS)
+
+    return _reduce(score, reduction)
 
 """
 Evaluate the model given a dataset
@@ -33,23 +76,26 @@ def evaluate(model, testDataset, args):
     
     with torch.no_grad():
         for i, data in enumerate(test_loader, 0):
-            print("Process: Batch " + str(i)+"/"+str(test_length))
+            
             # get the input
             img, mask, gt = data
             img = img.to(device)
             mask = mask.to(device)
-            gt = gt.to(device)
+            gt = util.unnormalize(gt.to(device))
             # get the output
             output = model(img, mask)
+            output = util.unnormalize(output)
             # perform Function
-            perform_dict["ssim"] += get_ssim(gt.cpu().numpy().squeeze().swapaxes(0,2),output.cpu().numpy().squeeze().swapaxes(0,2),channel_axis=3)
-            perform_dict["psnr"] += get_psnr(gt,output)
+            
+            perform_dict["ssim"] += ssim(output,gt)
+            perform_dict["psnr"] += psnr(output,gt)
             perform_dict["l1"] += get_l1(gt,output)
+            print("Process: Batch " + str(i)+"/"+str(test_length) + ' PSNR：{:.4f}，SSIM：{:.4f}，L1：{:.4f}'.format(perform_dict["psnr"]/(i+1), perform_dict["ssim"]/(i+1), perform_dict["l1"]/(i+1)))
         #GET AVG
         perform_dict["ssim"]  = perform_dict["ssim"] / test_length
         perform_dict["psnr"] = perform_dict["psnr"] / test_length
         perform_dict["l1"] = perform_dict["l1"] / test_length
-        print('PSNR：{}，SSIM：{}，L1：{}'.format(perform_dict["psnr"], perform_dict["ssim"], perform_dict["l1"]))
+        print('AVG Value : PSNR：{}，SSIM：{}，L1：{}'.format(perform_dict["psnr"], perform_dict["ssim"], perform_dict["l1"]))
 
     print('Testing Finished')
     print('Testing Time: {:.2f}'.format(time.time()-start_time))
@@ -80,12 +126,12 @@ def show_visual_result(model, dataset, output_dir, n=6):
 
     save_image(grid, os.path.join(output_dir, "output_show.jpg"))
 
-    print("Result successfully saved")
+    print("Visualization Result successfully saved")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default=1)#when in gtx960, the batch_size will be set to 4
+    parser.add_argument('--batch_size', type=int, default=16)#when in gtx960, the batch_size will be set to 4
     parser.add_argument('--img_dir', type=str, default="./dataset/val")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--model_dir', type=str, default="./model")

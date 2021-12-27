@@ -2,6 +2,13 @@
 
 ## Prerequisite
 
+Required environment:
+    Anaconda3
+    PyTorch
+    matplotlib
+    torchvision
+    piq (use "pip install piq" to install it)
+
 Download dataset and organize the dataset folder as follows:
 ```
 | -- dataset
