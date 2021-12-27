@@ -8,6 +8,8 @@ from torchvision.utils import save_image
 import time
 import os
 import argparse
+from skimage.metrics import structural_similarity as get_ssim
+from skimage.metrics import peak_signal_noise_ratio as get_psnr
 
 import util
 from net import PConvUNet
@@ -23,17 +25,34 @@ def evaluate(model, testDataset, args):
 
     print("Testing Started")  
     start_time = time.time()
-
+    test_length = len(test_loader)
     model.eval()
-
+    get_l1 = torch.nn.L1Loss()
+    perform_dict = {}
+    perform_dict["ssim"] = perform_dict["psnr"] = perform_dict["l1"] = 0
+    
     with torch.no_grad():
         for i, data in enumerate(test_loader, 0):
-            print("Process: Batch ", i)
+            print("Process: Batch " + str(i)+"/"+str(test_length))
             # get the input
             img, mask, gt = data
+            img = img.to(device)
+            mask = mask.to(device)
+            gt = gt.to(device)
             # get the output
             output = model(img, mask)
-            # TODO: Erro Function?
+            # perform Function
+            perform_dict["ssim"] += get_ssim(gt.cpu().numpy().squeeze().swapaxes(0,2),output.cpu().numpy().squeeze().swapaxes(0,2),channel_axis=3)
+            perform_dict["psnr"] += get_psnr(gt,output)
+            perform_dict["l1"] += get_l1(gt,output)
+        #GET AVG
+        perform_dict["ssim"]  = perform_dict["ssim"] / test_length
+        perform_dict["psnr"] = perform_dict["psnr"] / test_length
+        perform_dict["l1"] = perform_dict["l1"] / test_length
+        print('PSNR：{}，SSIM：{}，L1：{}'.format(perform_dict["psnr"], perform_dict["ssim"], perform_dict["l1"]))
+
+    print('Testing Finished')
+    print('Testing Time: {:.2f}'.format(time.time()-start_time))
 
 """
 Show masked image, mask, output, groud truth image in one grid
@@ -66,7 +85,7 @@ def show_visual_result(model, dataset, output_dir, n=6):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default=48)#when in gtx960, the batch_size will be set to 4
+    parser.add_argument('--batch_size', type=int, default=1)#when in gtx960, the batch_size will be set to 4
     parser.add_argument('--img_dir', type=str, default="./dataset/val")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--model_dir', type=str, default="./model")
@@ -77,5 +96,5 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load(os.path.join(args.model_dir, "model.pth")))
     testDataset = util.build_dataset(args.img_dir, args.mask_dir, isTrain=False)
 
-    # evaluate(model, testDataset, args)
+    evaluate(model, testDataset, args)
     show_visual_result(model, testDataset, args.out_dir)
