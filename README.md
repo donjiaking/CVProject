@@ -19,3 +19,6 @@ Run `python train.py` (with default parameters)
 
 Run `python test.py` (with default parameters)
 
+## CUDA
+
+In test.py train.py util.py , you can change torch.device ("cpu" or "cuda") to determine the compute device.
