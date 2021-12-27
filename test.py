@@ -66,7 +66,7 @@ def show_visual_result(model, dataset, output_dir, n=6):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', type=int, default=4)#when in gtx960, the batch_size will be set to 4
+    parser.add_argument('--batch_size', type=int, default=48)#when in gtx960, the batch_size will be set to 4
     parser.add_argument('--img_dir', type=str, default="./dataset/val")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--model_dir', type=str, default="./model")

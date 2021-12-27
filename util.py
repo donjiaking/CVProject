@@ -12,8 +12,8 @@ def build_dataset(img_dir, mask_dir, isTrain=True):
         transforms.ToTensor(),
         transforms.Resize(256),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])
-        # transforms.RandomHorizontalFlip(),
+                             std=[0.229, 0.224, 0.225]),
+        transforms.RandomHorizontalFlip()
         ])
     transform_train_msk = transforms.Compose([    
         transforms.ToTensor(),

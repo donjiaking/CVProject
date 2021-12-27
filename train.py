@@ -27,7 +27,7 @@ def train(model, args):
     model.train()
 
     for epoch in range(args.epochs):
-        # _adjust_lr(optimizer, args.init_lr, epoch+1) 
+        _adjust_lr(optimizer, args.init_lr, epoch) 
 
         for i, data in enumerate(train_loader, 0):
             # get the inputs
@@ -58,9 +58,9 @@ def train(model, args):
     print('Training Time: {:.2f}'.format(time.time()-start_time))
 
 
-# adust lr every 20 epochs
+# adust lr every 1 epoch
 def _adjust_lr(optimizer, init_lr, epoch_num):
-    lr = init_lr * (0.1 ** (epoch_num//20))
+    lr = init_lr * (0.1 ** (epoch_num//1))
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
@@ -69,7 +69,7 @@ def _adjust_lr(optimizer, init_lr, epoch_num):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--init_lr', type=float, default=2e-4)
+    parser.add_argument('--init_lr', type=float, default=2e-3)
     parser.add_argument('--batch_size', type=int, default=4) #when in gtx960, the batch_size will be set to 4
     parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--img_dir', type=str, default="./dataset/train")
