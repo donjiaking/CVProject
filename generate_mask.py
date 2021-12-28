@@ -8,11 +8,29 @@ walk_dir = [[0, 1], [0, -1], [1, 0], [-1, 0]]
 """
 use random walk to generate 0-1 mask
 """
+def write_masks(mask,mask_type):
+    if(mask_type == "-0.1"):
+        img = Image.fromarray(mask * 255).convert('1')
+        img.save('{:s}/{:06d}.jpg'.format('dataset/mask0', i))
+
+    elif(mask_type == "0.1-0.2"):
+        img = Image.fromarray(mask * 255).convert('1')
+        img.save('{:s}/{:06d}.jpg'.format('dataset/mask1', i))
+
+    elif(mask_type == "0.2-0.3"):
+        img = Image.fromarray(mask * 255).convert('1')
+        img.save('{:s}/{:06d}.jpg'.format('dataset/mask2', i))
+
+    else:
+        print("invalid canvas!")
+
 def random_walk(canvas):
+
     img_size = canvas.shape[0]
     length = img_size ** 2
     x = random.randint(0, img_size - 1)
     y = random.randint(0, img_size - 1)
+
     x_list = []
     y_list = []
     for i in range(length):
@@ -21,8 +39,27 @@ def random_walk(canvas):
         y = np.clip(y + walk_dir[r][1], a_min=0, a_max=img_size - 1)
         x_list.append(x)
         y_list.append(y)
+    zeros = 0
     canvas[np.array(x_list), np.array(y_list)] = 0
-    return canvas
+    for i in canvas:
+        zeros += np.bincount(i)[0]
+    value = zeros/length
+    
+    if(value <0.1):
+        mask_type = "-0.1"
+    elif(value < 0.2):
+        mask_type = "0.1-0.2"
+    elif(value < 0.3): 
+        mask_type = "0.2-0.3"
+    else:
+        mask_type = "invalid"
+        
+        
+
+
+    return canvas,mask_type
+    
+    
 
 
 if __name__ == '__main__':
@@ -36,11 +73,13 @@ if __name__ == '__main__':
 
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir)
+        os.makedirs('dataset/mask0')
+        os.makedirs('dataset/mask1')
+        os.makedirs('dataset/mask2')
 
     for i in range(args.N):
         canvas = np.ones((args.size, args.size)).astype(np.int8)
-        mask = random_walk(canvas)
+        mask,mask_type = random_walk(canvas)
+        write_masks(mask,mask_type)
         print("Process: ", i)
 
-        img = Image.fromarray(mask * 255).convert('1')
-        img.save('{:s}/{:06d}.jpg'.format(args.out_dir, i))
