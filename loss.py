@@ -1,6 +1,9 @@
 import torch
 import torch.nn as nn
 from torchvision import models
+import numpy as np
+import torch.nn.functional as F
+
 
 
 def gram_matrix(feature_matrix):
@@ -14,10 +17,27 @@ def gram_matrix(feature_matrix):
 
 	return gram_mat
 
+
 """
 project images into higher level feature spaces using part of 
 VGG16 network (pool1, pool2, pool3)
 """
+
+class L1LossMultiScale(nn.Module):
+    def __init__(self):
+        super(L1LossMultiScale, self).__init__()
+        self.weights = [1, 0.5, 0.25, 0.125]
+        self.l1 = nn.L1Loss()
+        self.downsample = nn.AvgPool2d(kernel_size = 2, count_include_pad=False)
+        
+    def forward(self, input, target):
+        loss = 0
+        for each_weight in self.weights:
+            loss += each_weight * self.l1(input, target)
+            input = self.downsample(input)
+            target = self.downsample(target)
+        return loss
+
 class VGG16Extractor(nn.Module):
     def __init__(self):
         super().__init__()
@@ -45,6 +65,10 @@ class LossFunc(nn.Module):
         super().__init__()
         self.vgg_extract = VGG16Extractor()
         self.l1 = nn.L1Loss()
+        self.l1_multi_scale = L1LossMultiScale()
+
+
+
 
     def forward(self, input_img, mask, out, gt):
         comp_out = (gt * mask) + (out * (1 - mask))
@@ -69,7 +93,9 @@ class LossFunc(nn.Module):
 
         l_tv = self.l1(comp_out[:,:,:,:-1], comp_out[:,:,:,1:]) + \
                self.l1(comp_out[:,:,:-1,:], comp_out[:,:,1:,:])
-
-        total_loss = l_valid + 6*l_hole + 0.05*l_perceptual + 120*l_style + 0.1*l_tv
+        
+        l_l1multi = self.l1_multi_scale(out,gt)
+        print(l_l1multi)
+        total_loss = l_valid + 6*l_hole + 0.1*l_perceptual + 120*l_style + 0.1*l_tv + l_l1multi
 
         return total_loss
