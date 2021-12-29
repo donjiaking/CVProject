@@ -59,8 +59,8 @@ def train(model, args):
 
 
 # adust lr every 1 epoch
-def _adjust_lr(optimizer, init_lr, epoch_num):
-    lr = init_lr * (0.1 ** (epoch_num//1))
+def _adjust_lr(optimizer, init_lr, epoch_num, decay=0.1, step_size=1):
+    lr = init_lr * (decay ** (epoch_num//step_size))
 
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr

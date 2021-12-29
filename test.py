@@ -90,12 +90,12 @@ def evaluate(model, testDataset, args):
             perform_dict["ssim"] += ssim(output,gt)
             perform_dict["psnr"] += psnr(output,gt)
             perform_dict["l1"] += get_l1(gt,output)
-            print("Process: Batch " + str(i)+"/"+str(test_length) + ' PSNR：{:.4f}，SSIM：{:.4f}，L1：{:.4f}'.format(perform_dict["psnr"]/(i+1), perform_dict["ssim"]/(i+1), perform_dict["l1"]/(i+1)))
+            print("Process: Batch " + str(i)+"/"+str(test_length) + ' PSNR: {:.4f}，SSIM: {:.4f}，L1: {:.4f}'.format(perform_dict["psnr"]/(i+1), perform_dict["ssim"]/(i+1), perform_dict["l1"]/(i+1)))
         #GET AVG
         perform_dict["ssim"]  = perform_dict["ssim"] / test_length
         perform_dict["psnr"] = perform_dict["psnr"] / test_length
         perform_dict["l1"] = perform_dict["l1"] / test_length
-        print('AVG Value : PSNR：{}，SSIM：{}，L1：{}'.format(perform_dict["psnr"], perform_dict["ssim"], perform_dict["l1"]))
+        print('AVG Value : PSNR: {}，SSIM: {}，L1: {}'.format(perform_dict["psnr"], perform_dict["ssim"], perform_dict["l1"]))
 
     print('Testing Finished')
     print('Testing Time: {:.2f}'.format(time.time()-start_time))
@@ -132,7 +132,7 @@ def show_visual_result(model, dataset, output_dir, n=6):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=16)#when in gtx960, the batch_size will be set to 4
-    parser.add_argument('--img_dir', type=str, default="./dataset/val")
+    parser.add_argument('--img_dir', type=str, default="./dataset/test")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--model_dir', type=str, default="./model")
     parser.add_argument('--out_dir', type=str, default="./result")

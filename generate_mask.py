@@ -5,9 +5,7 @@ from PIL import Image
 
 walk_dir = [[0, 1], [0, -1], [1, 0], [-1, 0]]
 
-"""
-use random walk to generate 0-1 mask
-"""
+
 def write_masks(mask,mask_type):
     if(mask_type == "-0.1"):
         img = Image.fromarray(mask * 255).convert('1')
@@ -23,7 +21,15 @@ def write_masks(mask,mask_type):
 
     else:
         print("invalid canvas!")
+    
+def write_masks_train(mask):
+    img = Image.fromarray(mask * 255).convert('1')
+    img.save('{:s}/{:06d}.jpg'.format('dataset/masks', i))
 
+
+"""
+use random walk to generate 0-1 mask
+"""
 def random_walk(canvas):
 
     img_size = canvas.shape[0]
@@ -53,12 +59,8 @@ def random_walk(canvas):
         mask_type = "0.2-0.3"
     else:
         mask_type = "invalid"
-        
-        
-
 
     return canvas,mask_type
-    
     
 
 
@@ -67,19 +69,20 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--size', type=int, default=256)
-    parser.add_argument('--N', type=int, default=5000)
+    parser.add_argument('--N', type=int, default=10000)
     parser.add_argument('--out_dir', type=str, default='dataset/masks')
     args = parser.parse_args()
 
     if not os.path.exists(args.out_dir):
         os.makedirs(args.out_dir)
-        os.makedirs('dataset/mask0')
-        os.makedirs('dataset/mask1')
-        os.makedirs('dataset/mask2')
+    for i in range(0, 3):
+        if not os.path.exists('dataset/mask{}'.format(i)):
+            os.makedirs('dataset/mask{}'.format(i))
 
     for i in range(args.N):
         canvas = np.ones((args.size, args.size)).astype(np.int8)
         mask,mask_type = random_walk(canvas)
+        write_masks_train(mask)
         write_masks(mask,mask_type)
         print("Process: ", i)
 

@@ -3,32 +3,35 @@
 ## Prerequisite
 
 Required environment:
-    Anaconda3
+    Numpy
     PyTorch
     matplotlib
-    torchvision
+    cv2
     piq (use "pip install piq" to install it)
 
-Download dataset and organize the dataset folder as follows:
+First download dataset and organize the dataset folder as follows:
 ```
 | -- dataset
     | -- train
+    | -- test
     | -- val
 ```
 
-Run `python generate_mask.py` to generate 5000 masks of 256*256 size by default. The corresponding masks are located in ./dataset
+Then run `python generate_mask.py` to generate 10000 masks of 256*256 size by default. It will create a directory `./dataset/masks`, which is used for training, and `./dataset/mask0`, `./dataset/mask1`, `./dataset/mask2`, which are used for testing under different kind of masks.
 
-You need to choose which masks to use (mask0/mask1/mask2), and copy the corresponding masks into ./dataset/masks for training.
-
-Different folders represent different hole-to-image ratios, mask0/mask1/mask2 represent 0-0.1 0.1-0.2 0.2-0.3 Respectively.
+Note: Different folders represent different hole-to-image ratios, mask0 mask1 mask2 represent 0-0.1 0.1-0.2 0.2-0.3 Respectively.
 
 ## Train
 
 Run `python train.py` (with default parameters)
 
+Note: You can use your own parameters by running `python train.py --init_lr 2e-3 --batch_size 4 --epochs 1 --img_dir ./dataset/train --mask_dir ./dataset/masks --out_dir ./model`
+
 ## Test
 
 Run `python test.py` (with default parameters)
+
+Note: You can use your own parameters by running `python test.py --batch_size 16 --img_dir ./dataset/test --mask_dir ./dataset/masks --model_dir ./model --out_dir ./result`
 
 ## CUDA
 

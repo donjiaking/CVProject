@@ -18,10 +18,6 @@ def gram_matrix(feature_matrix):
 	return gram_mat
 
 
-"""
-project images into higher level feature spaces using part of 
-VGG16 network (pool1, pool2, pool3)
-"""
 
 class L1LossMultiScale(nn.Module):
     def __init__(self):
@@ -38,6 +34,11 @@ class L1LossMultiScale(nn.Module):
             target = self.downsample(target)
         return loss
 
+
+"""
+project images into higher level feature spaces using part of 
+VGG16 network (pool1, pool2, pool3)
+"""
 class VGG16Extractor(nn.Module):
     def __init__(self):
         super().__init__()
@@ -67,9 +68,6 @@ class LossFunc(nn.Module):
         self.l1 = nn.L1Loss()
         self.l1_multi_scale = L1LossMultiScale()
 
-
-
-
     def forward(self, input_img, mask, out, gt):
         comp_out = (gt * mask) + (out * (1 - mask))
 
@@ -95,7 +93,7 @@ class LossFunc(nn.Module):
                self.l1(comp_out[:,:,:-1,:], comp_out[:,:,1:,:])
         
         l_l1multi = self.l1_multi_scale(out,gt)
-        print(l_l1multi)
+        # print(l_l1multi)
         total_loss = l_valid + 6*l_hole + 0.1*l_perceptual + 120*l_style + 0.1*l_tv + l_l1multi
 
         return total_loss
