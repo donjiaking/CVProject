@@ -10,6 +10,41 @@ from torchvision.utils import save_image
 
 import util
 
+
+def build_dataset(img_dir, mask_dir, isTrain=True):
+    ## train data augmentation
+    transform_train_img = transforms.Compose([    
+        transforms.ToTensor(),
+        transforms.Resize(256),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225]),
+        transforms.RandomHorizontalFlip()
+        ])
+    transform_train_msk = transforms.Compose([    
+        transforms.ToTensor(),
+        transforms.Resize(256),
+        ])
+
+    ## test data augmentation
+    transform_test_img = transforms.Compose([  
+        transforms.ToTensor(),
+        transforms.Resize(256),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                             std=[0.229, 0.224, 0.225])
+        ])
+    transform_test_msk = transforms.Compose([  
+        transforms.ToTensor(),
+        transforms.Resize(256),
+        ])
+    
+    if(isTrain):
+        imgDataset = ImgDataset(img_dir, mask_dir, transform_train_img, transform_train_msk)
+    else:
+        imgDataset = ImgDataset(img_dir, mask_dir, transform_test_img, transform_test_msk)
+
+    return imgDataset 
+
+
 """
 Wrapper class for Places2 Dateset
 """
@@ -29,8 +64,8 @@ class ImgDataset(Dataset):
         self.mask_names = {i:name for i,name in enumerate(os.listdir(mask_dir))}
 
     def __len__(self):
-        return len(self.img_names)
-        #return 1000
+        # return len(self.img_names)
+        return 10000
 
     def __getitem__(self, idx):
         image_path = os.path.join(self.img_dir, self.img_names[idx])
@@ -53,7 +88,7 @@ class ImgDataset(Dataset):
 
 #### For testing
 if __name__ == '__main__':
-    imgDataset = util.build_dataset('./dataset/train','./dataset/masks')
+    imgDataset = build_dataset('./dataset/train','./dataset/masks')
     print(len(imgDataset))
     nrow = 5
     img, mask, gt = zip(*[imgDataset[i] for i in range(nrow)])

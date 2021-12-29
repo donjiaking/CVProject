@@ -9,56 +9,13 @@ from torchvision.utils import save_image
 import time
 import os
 import argparse
-from piq.functional import gaussian_filter
-from piq.utils import _validate_input, _reduce
-from piq.ssim import _ssim_per_channel
 
 import util
+from dataset import build_dataset
 from net import PConvUNet
 
 ##added 2021/12/27
 device = torch.device('cuda')
-
-
-"""
-SSIM and PSNR function to evaluate the performance
-    References:
-        https://piq.readthedocs.io/en/latest/
-"""
-def ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, kernel_sigma: float = 1.5,
-        reduction: str = 'mean', full: bool = False, k1: float = 0.01, k2: float = 0.03):
-    x = x.type(torch.float32)
-    y = y.type(torch.float32)
-
-    kernel = gaussian_filter(kernel_size, kernel_sigma).repeat(x.size(1), 1, 1, 1).to(y)
-    ssim_map, cs_map = _ssim_per_channel(x=x, y=y, kernel=kernel,  k1=k1, k2=k2)
-    ssim_val = ssim_map.mean(1)
-    cs = cs_map.mean(1)
-
-    ssim_val = _reduce(ssim_val, reduction)
-    cs = _reduce(cs, reduction)
-
-    if full:
-        return [ssim_val, cs]
-
-    return ssim_val
-
-def psnr(x: torch.Tensor, y: torch.Tensor, 
-         reduction: str = 'mean', convert_to_greyscale: bool = False):
-
-    # Constant for numerical stability
-    EPS = 1e-8
-
-    if (x.size(1) == 3) and convert_to_greyscale:
-        # Convert RGB image to YCbCr and take luminance: Y = 0.299 R + 0.587 G + 0.114 B
-        rgb_to_grey = torch.tensor([0.299, 0.587, 0.114]).view(1, -1, 1, 1).to(x)
-        x = torch.sum(x * rgb_to_grey, dim=1, keepdim=True)
-        y = torch.sum(y * rgb_to_grey, dim=1, keepdim=True)
-
-    mse = torch.mean((x - y) ** 2, dim=[1, 2, 3])
-    score: torch.Tensor = - 10 * torch.log10(mse + EPS)
-
-    return _reduce(score, reduction)
 
 """
 Evaluate the model given a dataset
@@ -70,7 +27,6 @@ def evaluate(model, testDataset, args):
     start_time = time.time()
     test_length = len(test_loader)
     model.eval()
-    get_l1 = torch.nn.L1Loss()
     perform_dict = {}
     perform_dict["ssim"] = perform_dict["psnr"] = perform_dict["l1"] = 0
     
@@ -87,18 +43,19 @@ def evaluate(model, testDataset, args):
             output = util.unnormalize(output)
             # perform Function
             
-            perform_dict["ssim"] += ssim(output,gt)
-            perform_dict["psnr"] += psnr(output,gt)
-            perform_dict["l1"] += get_l1(gt,output)
-            print("Process: Batch " + str(i)+"/"+str(test_length) + ' PSNR: {:.4f}，SSIM: {:.4f}，L1: {:.4f}'.format(perform_dict["psnr"]/(i+1), perform_dict["ssim"]/(i+1), perform_dict["l1"]/(i+1)))
+            perform_dict["ssim"] += util.ssim(output,gt)
+            perform_dict["psnr"] += util.psnr(output,gt)
+            perform_dict["l1"] += util.l1loss(gt,output)
+            print("Process: Batch " + str(i)+"/"+str(test_length) + ' PSNR: {:.4f}, SSIM: {:.4f}, L1: {:.4f}'.format(perform_dict["psnr"]/(i+1), perform_dict["ssim"]/(i+1), perform_dict["l1"]/(i+1)))
         #GET AVG
         perform_dict["ssim"]  = perform_dict["ssim"] / test_length
         perform_dict["psnr"] = perform_dict["psnr"] / test_length
         perform_dict["l1"] = perform_dict["l1"] / test_length
-        print('AVG Value : PSNR: {}，SSIM: {}，L1: {}'.format(perform_dict["psnr"], perform_dict["ssim"], perform_dict["l1"]))
+        print('AVG Value : PSNR: {}, SSIM: {}, L1: {}'.format(perform_dict["psnr"], perform_dict["ssim"], perform_dict["l1"]))
 
     print('Testing Finished')
     print('Testing Time: {:.2f}'.format(time.time()-start_time))
+
 
 """
 Show masked image, mask, output, groud truth image in one grid
@@ -140,7 +97,7 @@ if __name__ == "__main__":
 
     model = PConvUNet().to(device)
     model.load_state_dict(torch.load(os.path.join(args.model_dir, "model.pth")))
-    testDataset = util.build_dataset(args.img_dir, args.mask_dir, isTrain=False)
+    testDataset = build_dataset(args.img_dir, args.mask_dir, isTrain=False)
 
     evaluate(model, testDataset, args)
     show_visual_result(model, testDataset, args.out_dir)

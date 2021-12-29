@@ -1,4 +1,4 @@
-# CVProject - Image Inpainting
+# CVProject - Image Inpainting Using Partial Convolution
 
 ## Prerequisite
 
@@ -7,6 +7,7 @@ Required environment:
     PyTorch
     matplotlib
     cv2
+    PIL
     piq (use "pip install piq" to install it)
 
 First download dataset and organize the dataset folder as follows:
@@ -25,14 +26,14 @@ Note: Different folders represent different hole-to-image ratios, mask0 mask1 ma
 
 Run `python train.py` (with default parameters)
 
-Note: You can use your own parameters by running `python train.py --init_lr 2e-3 --batch_size 4 --epochs 1 --img_dir ./dataset/train --mask_dir ./dataset/masks --out_dir ./model`
+You can set customized parameters: `python train.py --init_lr 2e-3 --batch_size 4 --epochs 1 --img_dir ./dataset/train --mask_dir ./dataset/masks --model_dir ./model --out_dir ./result`
 
 ## Test
 
 Run `python test.py` (with default parameters)
 
-Note: You can use your own parameters by running `python test.py --batch_size 16 --img_dir ./dataset/test --mask_dir ./dataset/masks --model_dir ./model --out_dir ./result`
+You can set customized parameters: `python test.py --batch_size 16 --img_dir ./dataset/test --mask_dir ./dataset/masks --model_dir ./model --out_dir ./result`
 
 ## CUDA
 
-In test.py train.py util.py , you can change torch.device ("cpu" or "cuda") to determine the compute device.
+In test.py train.py util.py , you can change `torch.device ("cpu" or "cuda")` to determine the compute device.
