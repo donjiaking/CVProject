@@ -18,6 +18,7 @@ SSIM and PSNR function to evaluate the performance
 """
 def ssim(x: torch.Tensor, y: torch.Tensor, kernel_size: int = 11, kernel_sigma: float = 1.5,
         reduction: str = 'mean', full: bool = False, k1: float = 0.01, k2: float = 0.03):
+
     x = x.type(torch.float32)
     y = y.type(torch.float32)
 

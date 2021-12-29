@@ -23,6 +23,7 @@ def build_dataset(img_dir, mask_dir, isTrain=True):
     transform_train_msk = transforms.Compose([    
         transforms.ToTensor(),
         transforms.Resize(256),
+        transforms.RandomHorizontalFlip()
         ])
 
     ## test data augmentation
@@ -64,8 +65,8 @@ class ImgDataset(Dataset):
         self.mask_names = {i:name for i,name in enumerate(os.listdir(mask_dir))}
 
     def __len__(self):
-        # return len(self.img_names)
-        return 10000
+        return len(self.img_names)
+        # return 10000
 
     def __getitem__(self, idx):
         image_path = os.path.join(self.img_dir, self.img_names[idx])

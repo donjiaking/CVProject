@@ -14,7 +14,7 @@ import util
 
 ##added 2021/12/27
 device = torch.device('cuda')
-
+cpu_device = torch.device("cpu")
 
 def train(model, args):
     trainDataset = build_dataset(args.val_dir, args.mask_dir, isTrain=True)
@@ -53,9 +53,10 @@ def train(model, args):
             optimizer.step()
 
             output, gt = util.unnormalize(output), util.unnormalize(gt)
-            ssim += util.ssim(output, gt)
-            psnr += util.psnr(output, gt)
-            l1 += util.l1loss(output, gt)
+            with torch.no_grad():
+                ssim += util.ssim(output, gt)
+                psnr += util.psnr(output, gt)
+                l1 += util.l1loss(output, gt)
             mean_loss += loss.item()
 
             # print statistics after every 5 batches
@@ -114,7 +115,7 @@ def evaluate(model, val_loader):
 """
 decrease lr every `step_size` epochs by `decay` times
 """
-def _adjust_lr(optimizer, init_lr, epoch_num, decay=0.1, step_size=1):
+def _adjust_lr(optimizer, init_lr, epoch_num, decay=0.5, step_size=2):
     lr = init_lr * (decay ** (epoch_num//step_size))
 
     for param_group in optimizer.param_groups:
