@@ -115,7 +115,7 @@ def evaluate(model, val_loader):
 """
 decrease lr every `step_size` epochs by `decay` times
 """
-def _adjust_lr(optimizer, init_lr, epoch_num, decay=0.5, step_size=2):
+def _adjust_lr(optimizer, init_lr, epoch_num, decay=0.6, step_size=1):
     lr = init_lr * (decay ** (epoch_num//step_size))
 
     for param_group in optimizer.param_groups:
