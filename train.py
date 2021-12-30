@@ -14,10 +14,9 @@ import util
 
 ##added 2021/12/27
 device = torch.device('cuda')
-cpu_device = torch.device("cpu")
 
 def train(model, args):
-    trainDataset = build_dataset(args.val_dir, args.mask_dir, isTrain=True)
+    trainDataset = build_dataset(args.train_dir, args.mask_dir, isTrain=True)
     valDataset = build_dataset(args.val_dir, args.mask_dir, isTrain=False)
     train_loader = DataLoader(trainDataset, batch_size=args.batch_size, shuffle=False)
     val_loader = DataLoader(valDataset, batch_size=args.batch_size, shuffle=False)
@@ -128,7 +127,8 @@ if __name__ == "__main__":
     parser.add_argument('--init_lr', type=float, default=2e-3)
     parser.add_argument('--batch_size', type=int, default=4) #when in gtx960, the batch_size will be set to 4
     parser.add_argument('--epochs', type=int, default=15)
-    parser.add_argument('--val_dir', type=str, default="./dataset/train")
+    parser.add_argument('--train_dir', type=str, default="./dataset/train")
+    parser.add_argument('--val_dir', type=str, default="./dataset/val")
     parser.add_argument('--mask_dir', type=str, default="./dataset/masks")
     parser.add_argument('--model_dir', type=str, default="./model")
     parser.add_argument('--out_dir', type=str, default="./result")
