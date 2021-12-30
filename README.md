@@ -26,7 +26,7 @@ Note: Different folders represent different hole-to-image ratios, mask0 mask1 ma
 
 Run `python train.py` (with default parameters)
 
-You can set customized parameters: `python train.py --init_lr 2e-3 --batch_size 4 --epochs 1 --img_dir ./dataset/train --mask_dir ./dataset/masks --model_dir ./model --out_dir ./result`
+You can set customized parameters: `python train.py --init_lr 2e-3 --batch_size 4 --epochs 1 --train_dir ./dataset/train --val_dir ./dataset/val --mask_dir ./dataset/masks --model_dir ./model --out_dir ./result`
 
 ## Test
 
@@ -37,3 +37,7 @@ You can set customized parameters: `python test.py --batch_size 16 --img_dir ./d
 ## CUDA
 
 In test.py train.py util.py , you can change `torch.device ("cpu" or "cuda")` to determine the compute device.
+
+## Reference
+
+https://arxiv.org/abs/1804.07723
