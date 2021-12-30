@@ -24,7 +24,7 @@ class L1LossMultiScale(nn.Module):
         super(L1LossMultiScale, self).__init__()
         self.weights = [1, 0.5, 0.25, 0.125]
         self.l1 = nn.L1Loss()
-        self.downsample = nn.AvgPool2d(kernel_size = 2, count_include_pad=False)
+        self.downsample = nn.MaxPool2d(kernel_size = 2, count_include_pad=False)
         
     def forward(self, input, target):
         loss = 0
